@@ -1,0 +1,10 @@
+# fichiers compilés et exécutables
+*.class
+*.jar
+
+# dossiers résultats
+res*/
+
+# sujet
+selection*.csv
+sujet.pdf
