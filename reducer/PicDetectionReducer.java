@@ -42,7 +42,7 @@ public class PicDetectionReducer extends Reducer<LongWritable, DoubleWritable, L
 		// fin d'un pic
 		if (inPic) {
 			long duration = now - startPic;
-			context.write(new LongWritable(startPic), new Text(sumUsage + " ; " + duration));
+			context.write(new LongWritable(startPic), new Text(sumUsage + ";" + duration));
 			inPic = false;
 			sumUsage = 0;
 		}

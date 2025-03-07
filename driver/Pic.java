@@ -4,6 +4,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -17,8 +18,11 @@ import org.apache.hadoop.util.ToolRunner;
 import java.util.Random;
 import mapper.InstantCPUMapper;
 import mapper.InstantCPUReadMapper;
+import mapper.SortPicMapper;
 import reducer.DoubleSumReducer;
 import reducer.PicDetectionReducer;
+import reducer.SortPicReducer;
+import writable.PicWritable;
 
 public class Pic extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
@@ -51,9 +55,9 @@ public class Pic extends Configured implements Tool {
         job1.setJarByClass(Pic.class);
         job1.setJobName(this.getClass().getName() + ".job1");
 
-        Path tempDir = new Path(this.getClass().getName() + "-temp-" + Integer.toString(new Random().nextInt(Integer.MAX_VALUE)));
+        Path tempDir1 = new Path(this.getClass().getName() + ".1-temp-" + Integer.toString(new Random().nextInt(Integer.MAX_VALUE)));
 		FileInputFormat.setInputPaths(job1, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job1, tempDir);
+		FileOutputFormat.setOutputPath(job1, tempDir1);
 		job1.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job1.setMapperClass(InstantCPUMapper.class);
@@ -79,9 +83,11 @@ public class Pic extends Configured implements Tool {
 
         job2.setNumReduceTasks(1);
 
+        Path tempDir2 = new Path(this.getClass().getName() + ".2-temp-" + Integer.toString(new Random().nextInt(Integer.MAX_VALUE)));
         job2.setInputFormatClass(SequenceFileInputFormat.class);
-        FileInputFormat.setInputPaths(job2, tempDir);
-        FileOutputFormat.setOutputPath(job2, new Path(args[1]));
+        FileInputFormat.setInputPaths(job2, tempDir1);
+        FileOutputFormat.setOutputPath(job2, tempDir2);
+        job2.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job2.setMapperClass(InstantCPUReadMapper.class);
         job2.setReducerClass(PicDetectionReducer.class);
@@ -93,15 +99,37 @@ public class Pic extends Configured implements Tool {
         job2.setOutputValueClass(Text.class);
 
         success = job2.waitForCompletion(true);
-        // if (!success) {
-		// 	return 1;
-		// }
+
+        FileSystem.get(conf).delete(tempDir1, true);
+
+        if (!success) {
+			return 1;
+		}
 
 
-        // // job 3 : ordonner les pics
-        // Job job3 = Job.getInstance(conf);
+        // job 3 : ordonner les pics
+        Job job3 = Job.getInstance(conf);
+        job3.setJarByClass(Pic.class);
+        job3.setJobName(this.getClass().getName() + ".job3");
 
-        FileSystem.get(conf).delete(tempDir, true);
+        job3.setNumReduceTasks(1);
+
+        job3.setInputFormatClass(SequenceFileInputFormat.class);
+        FileInputFormat.setInputPaths(job3, tempDir2);
+        FileOutputFormat.setOutputPath(job3, new Path(args[1]));
+
+        job3.setMapperClass(SortPicMapper.class);
+        job3.setReducerClass(SortPicReducer.class);
+
+        job3.setMapOutputKeyClass(PicWritable.class);
+        job3.setMapOutputValueClass(NullWritable.class);
+
+        job3.setOutputKeyClass(LongWritable.class);
+        job3.setOutputValueClass(Text.class);
+
+        success = job3.waitForCompletion(true);
+
+        FileSystem.get(conf).delete(tempDir2, true);
 
         return success ? 0 : 1;
     }
