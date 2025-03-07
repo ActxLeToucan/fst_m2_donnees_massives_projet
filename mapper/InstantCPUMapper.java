@@ -7,7 +7,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.conf.Configuration;
 
-public class InstantCPUMapper extends Mapper<LongWritable, Text, Text, DoubleWritable> {
+public class InstantCPUMapper extends Mapper<LongWritable, Text, LongWritable, DoubleWritable> {
 	private boolean maxUsage = false;
 
 	@Override 
@@ -21,8 +21,8 @@ public class InstantCPUMapper extends Mapper<LongWritable, Text, Text, DoubleWri
         String line = value.toString();
         String[] words = line.split(",", -1);
 
-        int debut = Integer.parseInt(words[4]);
-        int fin = Integer.parseInt(words[5]);
+        long debut = Long.parseLong(words[4]);
+        long fin = Long.parseLong(words[5]);
 
         // 7: moy cpu usage
         // 8: max cpu usage
@@ -36,8 +36,8 @@ public class InstantCPUMapper extends Mapper<LongWritable, Text, Text, DoubleWri
         }
         double cpuUsage = Double.parseDouble(cpuStr);
         
-        for (int i = debut; i < fin; i++) {
-            context.write(new Text(i+""), new DoubleWritable(cpuUsage));
+        for (long i = debut; i < fin; i++) {
+            context.write(new LongWritable(i), new DoubleWritable(cpuUsage));
         }
     }
 }
