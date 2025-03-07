@@ -1,8 +1,20 @@
 # projet
-## 1
+## 1. Jobs et tâches
+### 1. Liste des tâches
+> [!NOTE]
+> TODO
+
 ### 2. Liste des jobs
 ```sh
 hadoop com.sun.tools.javac.Main */*.java
-jar -cf proj_1.2.jar */*.class
-hadoop jar proj_1.2.jar driver.JobList -D mapreduce.job.reduces=2 -fs file:/// -jt local <input> <output>
+jar -cf proj.jar */*.class
+hadoop jar proj.jar driver.JobList -D mapreduce.job.reduces=2 -fs file:/// -jt local <input> <output>
 ```
+
+## 2. Pic de consommation
+```sh
+hadoop com.sun.tools.javac.Main */*.java
+jar -cf proj.jar */*.class
+hadoop jar proj.jar driver.Pic -D mapreduce.job.reduces=2 -fs file:/// -jt local <input> <output> [-max]
+```
+On peut ajouter l'option `-max` travailler à partir du max de consommation des instances au lieu de la moyenne.
