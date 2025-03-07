@@ -5,6 +5,9 @@
 # dossiers résultats
 res*/
 
+# fichiers temporaires
+*-temp-*/
+
 # sujet
 selection*.csv
 sujet.pdf
