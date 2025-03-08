@@ -19,7 +19,7 @@ import java.util.Random;
 import mapper.InstantCPUMapper;
 import mapper.InstantCPUReadMapper;
 import mapper.SortPicMapper;
-import reducer.DoubleSumReducer;
+import reducer.LongDoubleSumReducer;
 import reducer.PicDetectionReducer;
 import reducer.SortPicReducer;
 import writable.PicWritable;
@@ -61,8 +61,8 @@ public class Pic extends Configured implements Tool {
 		job1.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job1.setMapperClass(InstantCPUMapper.class);
-        job1.setCombinerClass(DoubleSumReducer.class);
-        job1.setReducerClass(DoubleSumReducer.class);
+        job1.setCombinerClass(LongDoubleSumReducer.class);
+        job1.setReducerClass(LongDoubleSumReducer.class);
 
         job1.setMapOutputKeyClass(LongWritable.class);
 		job1.setMapOutputValueClass(DoubleWritable.class);
