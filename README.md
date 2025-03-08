@@ -1,8 +1,11 @@
 # projet
 ## 1. Jobs et tâches
 ### 1. Liste des tâches
-> [!NOTE]
-> TODO
+```sh
+hadoop com.sun.tools.javac.Main */*.java
+jar -cf proj.jar */*.class
+hadoop jar proj.jar driver.TaskList -D mapreduce.job.reduces=2 -fs file:/// -jt local <input> <output>
+```
 
 ### 2. Liste des jobs
 ```sh
