@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Random ;
+import java.util.ArrayList;
+import java.util.*;
 import reducer.KMeanReducer;
 import mapper.KMeanMapper;
 
 
 public class KMean extends Configured implements Tool {
-
-	private final int MAX_ITERATION = 10;
 
 	public static void main(String[] args) throws Exception{
 		int exitCode = ToolRunner.run(new Configuration(), new KMean(), args);
@@ -36,9 +36,22 @@ public class KMean extends Configured implements Tool {
 
 	public int run(String[] args) throws Exception {
 
-		if (args.length != 3) {
+		if (args.length < 3) {
 			System.out.printf("Usage: KMean [generic options] <input dir> <output dir> <centroids file> [options]\n");
 			return -1 ;
+		}
+
+		int max_iteration = 10;
+		int iarg = 3 ;
+		while(iarg<args.length){
+			if(args[iarg].equals("-iter")){
+				iarg++;
+				max_iteration = Integer.parseInt(args[iarg]);
+			}else{
+				System.out.printf("Unknown option "+args[2]+"\n");
+				System.exit(-1); 					
+			}
+			iarg++ ;
 		}
 
 		Configuration conf = this.getConf() ;
@@ -46,9 +59,13 @@ public class KMean extends Configured implements Tool {
 		Path inputPath = new Path(args[0]);
 		Path outputPath = new Path(args[1]);
 		Path centroidPath = new Path(args[2]);
-		// KMean -> Algorithme Itératif donc on repète en boucle un même job pour "affiner" la position des centroïdes
-		for(int i = 0; i < MAX_ITERATION; i++){
 
+		List<List<double[]>> centroidsResults = new ArrayList<>(); // Sert à sauvegarder les anciens résultats de centroides pour aider à la vérification de la convergence
+
+		// KMean -> Algorithme Itératif donc on repète en boucle un même job pour "affiner" la position des centroïdes
+		for(int i = 0; i < max_iteration; i++){
+
+			Path iterationOutputPath = new Path(outputPath, ""+i);
 
 			// On récupère le fichier temporaire des centroïdes
 			Path pp = i == 0 ? centroidPath : new Path(outputPath, (i-1)+"/centroids.txt");
@@ -60,7 +77,7 @@ public class KMean extends Configured implements Tool {
 			job.setJobName("KMean");
 
 			FileInputFormat.setInputPaths(job, inputPath);
-			FileOutputFormat.setOutputPath(job, new Path(outputPath, ""+i));
+			FileOutputFormat.setOutputPath(job, iterationOutputPath);
 
 			job.setMapperClass(KMeanMapper.class);
 			job.setReducerClass(KMeanReducer.class);
@@ -77,7 +94,7 @@ public class KMean extends Configured implements Tool {
 			
 			if(success){
 				Path newCentroidPath = new Path(outputPath, i+"/centroids.txt");
-				saveNewCentroids(conf, new Path(outputPath, ""+i), newCentroidPath);
+				centroidsResults.add(saveNewCentroids(conf, iterationOutputPath, newCentroidPath));
 			}else{
 				return 1;
 			}
@@ -92,7 +109,7 @@ public class KMean extends Configured implements Tool {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(centroidPath)));
 		String line;
 		while ((line = reader.readLine()) != null) {
-			centroidsData.append(line.split("\t")[1]).append("\n");
+			centroidsData.append(line).append("\n");
 		}
 		reader.close();
 		return centroidsData.toString();
@@ -104,9 +121,12 @@ public class KMean extends Configured implements Tool {
 	 * @param conf             Configuration Hadoop
 	 * @param outputPath       Chemin des sorties de l'itération courante
 	 * @param centroidsOutput  Chemin du nouveau fichier de centroïdes à générer
+	 * @return les positions des centroides enregistrés
 	 */
-	private void saveNewCentroids(Configuration conf, Path outputPath, Path centroidsOutput) throws IOException {
+	private List<double[]> saveNewCentroids(Configuration conf, Path outputPath, Path centroidsOutput) throws IOException {
 		FileSystem fs = FileSystem.get(conf);
+
+		List<double[]> centroids = new ArrayList<>();
 
 		// Chemin vers le fichier de résultats intermédisaires (produit par le Reducer)
 		Path partFile = new Path(outputPath, "part-r-00000");
@@ -119,13 +139,23 @@ public class KMean extends Configured implements Tool {
 		while ((line = reader.readLine()) != null) {
 			String[] parts = line.split("\t"); // Split sur tabulation (ClusterID et coordonnées)
 			if (parts.length == 2) {
-				writer.write(parts[0] + "\t" + parts[1]); // Écrire "ClusterID \t Coordinates"
+				writer.write(parts[1]); // Écrire "coordinates"
+
+				String[] features = parts[1].split(",");
+				centroids.add(new double[]{
+					Double.parseDouble(features[0]),
+					Double.parseDouble(features[1]),
+					Double.parseDouble(features[2])
+				});
+
 				writer.newLine();
 			}
 		}
 
 		reader.close();
 		writer.close();
+
+		return centroids;
 	}
 
 }

@@ -28,3 +28,13 @@ hadoop com.sun.tools.javac.Main */*.java
 jar -cf proj.jar */*.class
 hadoop jar proj.jar driver.Puisssance -D mapreduce.job.reduces=2 -fs file:/// -jt local <input> <output>
 ```
+
+## 4. Clusterisation en utilisation l'algorithme K-Means
+```sh
+hadoop com.sun.tools.javac.Main */*.java
+jar -cf proj.jar */*.class
+hadoop jar proj.jar driver.KMean -D mapreduce.job.reduces=1 -fs file:/// -jt local <input> <output> <centroids_file> [-iter <nb_iterations>]
+```
+
+L'option `-iter` permet de spécifier le nombre d'itérations maximum de l'algorithme K-Means (par défaut 10).
+L'entrée centroids_file est un fichier contenant les coordonnées des centroids initiaux (nous n'avons pas implémenté la génération automatique des centroids initiaux). Un exemple de ce fichier est disponible à la racine du projet : `/centroids.txt`.

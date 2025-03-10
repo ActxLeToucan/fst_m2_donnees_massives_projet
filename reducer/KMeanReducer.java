@@ -15,10 +15,9 @@ public class KMeanReducer extends Reducer<IntWritable, Text, IntWritable, Text> 
         double[] sumPoint = new double[]{
             0,
             0,
-            //0,
             0
-            //0
         };
+
         int count = 0;
 
         for (Text value : values) {
@@ -28,18 +27,14 @@ public class KMeanReducer extends Reducer<IntWritable, Text, IntWritable, Text> 
             double startTime = Double.parseDouble(fields[4]);
             double endTime = Double.parseDouble(fields[5]);
             double moyCpu = Double.parseDouble(fields[7]);
-            //double maxCpu = Double.parseDouble(fields[8]);
             double moyRam = Double.parseDouble(fields[9]);
-            //double maxRam = Double.parseDouble(fields[10]);
             
             double duration = endTime - startTime;
 
             double[] point = new double[]{
                 duration,
                 moyCpu,
-                //maxCpu,
                 moyRam
-                //maxRam
             };
             
             for(int i = 0; i < point.length; i++)
@@ -48,16 +43,12 @@ public class KMeanReducer extends Reducer<IntWritable, Text, IntWritable, Text> 
             count++;
         }
 
-
         double newCentroidDuration = sumPoint[0] / count;
         double newCentroidMoyCpu = sumPoint[1] / count;
-       // double newCentroidMaxCpu = sumPoint[2] / count;
         double newCentroidMoyRam = sumPoint[2] / count;
-        //double newCentroidMaxRam = sumPoint[4] / count;
-        
 
         // Écriture de la sortie : <index_centroid> <duration> ; <moyCpu> ; <maxCpu> ; <MoyRam> ; <MaxRam>
-        //context.write(key, new Text(newCentroidDuration + "," + newCentroidMoyCpu + "," + newCentroidMaxCpu + "," + newCentroidMoyRam + "," + newCentroidMaxRam));
+        //context.write(key, new Text(newCentroidDuration + "," + newCentroidMoyCpu + "," + newCentroidMoyRam));
         context.write(key, new Text(newCentroidDuration + "," + newCentroidMoyCpu + "," + newCentroidMoyRam));
     }
 }

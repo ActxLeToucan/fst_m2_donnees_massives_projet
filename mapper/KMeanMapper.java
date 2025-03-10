@@ -22,15 +22,12 @@ public class KMeanMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 
         // Lire les centres des clusters
         String centroidsData = context.getConfiguration().get("centroids");
-        System.out.println(centroidsData);
         for (String line : centroidsData.split("\n")) {
             String[] parts = line.split(",");
             centroids.add(new double[]{
                 Double.parseDouble(parts[0]), 
-                Double.parseDouble(parts[1]), 
-                //Double.parseDouble(parts[2]), 
+                Double.parseDouble(parts[1]),
                 Double.parseDouble(parts[2])
-                //Double.parseDouble(parts[4])
             });
         }
 
@@ -53,19 +50,15 @@ public class KMeanMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
         String startTimeStr = fields[4]; // Date de départ
         String endTimeStr = fields[5];   // Date de fin
         String moyCpuStr = fields[7];
-        String maxCpuStr = fields[8];
         String moyRamStr = fields[9];
-        String maxRamStr = fields[10];
 
-        if(startTimeStr.isEmpty() || endTimeStr.isEmpty() || moyCpuStr.isEmpty() || maxCpuStr.isEmpty() || moyRamStr.isEmpty() || maxRamStr.isEmpty())
+        if(startTimeStr.isEmpty() || endTimeStr.isEmpty() || moyCpuStr.isEmpty() || moyRamStr.isEmpty())
             return;
         
         double startTime = Double.parseDouble(startTimeStr);
         double endTime = Double.parseDouble(endTimeStr);
         double moyCpu = Double.parseDouble(moyCpuStr);
-        //double maxCpu = Double.parseDouble(maxCpuStr);
         double moyRam = Double.parseDouble(moyRamStr);
-        //double maxRam = Double.parseDouble(maxRamStr);
 
         if(startTime > endTime || startTime < 0 || endTime < 0)
             return;
@@ -75,16 +68,14 @@ public class KMeanMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
         double[] point = new double[]{
             duration,
             moyCpu,
-            //maxCpu,
             moyRam
-            //maxRam
         };
 
         // Trouver cluster le plus proche
         int closestCluster = 0;
         double minDistance = Double.MAX_VALUE;
         for(int i = 0; i < centroids.size(); i++){
-            double dist = distanceToCentroid(point, centroids.get(i));
+            double dist = euclidianDistanceToCentroid(point, centroids.get(i));
             if(dist < minDistance){
                 minDistance = dist;
                 closestCluster = i;
@@ -99,7 +90,7 @@ public class KMeanMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
         }
     }
 
-    private double distanceToCentroid(double[] point, double[] centroid){
+    private double euclidianDistanceToCentroid(double[] point, double[] centroid){
         double sum = 0;
 
         for(int i = 0; i < point.length; i++){
