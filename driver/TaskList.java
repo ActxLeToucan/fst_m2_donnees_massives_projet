@@ -38,7 +38,7 @@ public class TaskList extends Configured implements Tool {
 		Job job = Job.getInstance(conf);
 
 		job.setJarByClass(TaskList.class);
-		job.setJobName("Word-Count");
+		job.setJobName("Task-List");
 
 		FileInputFormat.setInputPaths(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
@@ -53,9 +53,6 @@ public class TaskList extends Configured implements Tool {
 		job.setOutputValueClass(Text.class);
 
 		boolean success = job.waitForCompletion(true);
-
-		success = job.waitForCompletion(true);
-
 		if(success){
 			return 0 ;
 		}else{
